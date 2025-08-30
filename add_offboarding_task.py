@@ -15,8 +15,13 @@ load_dotenv()
 
 class OpenProjectTaskAdder:
     def __init__(self):
-        self.base_url = os.getenv("OPENPROJECT_URL", "http://localhost:8080")
-        self.api_key = os.getenv("OPENPROJECT_API_KEY", "")
+        self.base_url = os.getenv("OPENPROJECT_URL")
+        self.api_key = os.getenv("OPENPROJECT_API_KEY")
+        
+        if not self.base_url:
+            raise ValueError("OPENPROJECT_URL environment variable is required")
+        if not self.api_key:
+            raise ValueError("OPENPROJECT_API_KEY environment variable is required")
         
         auth_string = base64.b64encode(f'apikey:{self.api_key}'.encode()).decode()
         self.headers = {

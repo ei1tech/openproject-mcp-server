@@ -21,7 +21,7 @@ class Settings:
         
         # MCP server configuration
         self.mcp_host: str = os.getenv("MCP_HOST", "localhost")
-        self.mcp_port: int = int(os.getenv("MCP_PORT", "8080"))
+        self.mcp_port: int = int(os.getenv("MCP_PORT", "39127"))
         self.log_level: str = os.getenv("MCP_LOG_LEVEL", "INFO")
         
         # Validate configuration
