@@ -13,9 +13,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 if __name__ == "__main__":
     try:
         from mcp_server import app
-        # Run the FastMCP app in HTTP mode on port 8080
-        print("Starting OpenProject MCP Server in HTTP mode on port 8080...")
-        app.run(transport="sse", host="0.0.0.0", port=8080)
+        from config import settings
+        # Run the FastMCP app in HTTP mode
+        print(f"Starting OpenProject MCP Server in HTTP mode on {settings.mcp_host}:{settings.mcp_port}...")
+        app.run(transport="sse", host=settings.mcp_host, port=settings.mcp_port)
     except ImportError as e:
         print(f"Import error: {e}")
         sys.exit(1)

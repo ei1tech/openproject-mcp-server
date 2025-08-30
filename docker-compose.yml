@@ -13,12 +13,12 @@ services:
       - OPENPROJECT_URL=${OPENPROJECT_URL:-http://host.docker.internal:8080}
       - OPENPROJECT_API_KEY=${OPENPROJECT_API_KEY}
       - MCP_HOST=${MCP_HOST:-0.0.0.0}
-      - MCP_PORT=${MCP_PORT:-8080}
+      - MCP_PORT=${MCP_PORT:-39127}
       - MCP_LOG_LEVEL=${MCP_LOG_LEVEL:-INFO}
     
     # Port mapping (for HTTP transport and status endpoints)
     ports:
-      - "${MCP_PORT:-39127}:8080"
+      - "${MCP_PORT:-39127}:${MCP_PORT:-39127}"
       - "39128:8081"
     
     # Volume mounts for persistence
