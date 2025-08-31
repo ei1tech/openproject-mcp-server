@@ -90,6 +90,7 @@ run_container() {
         --name $CONTAINER_NAME \
         --env-file .env \
         -p $port:39127 \
+        -p 39128:8081 \
         -v "$(pwd)/logs:/app/logs" \
         -v "$(pwd)/data:/app/data" \
         --restart unless-stopped \
