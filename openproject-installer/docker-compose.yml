@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # nginx-proxy for reverse proxy
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - openproject-network
+
+  # OpenProject service with persistent storage
+  openproject:
+    image: openproject/openproject:14
+    container_name: openproject
+    environment:
+      - VIRTUAL_HOST=openproject.home
+      - VIRTUAL_PORT=80
+      - OPENPROJECT_SECRET_KEY_BASE=your-secret-key-here
+      - OPENPROJECT_HOST__NAME=openproject.home
+      - OPENPROJECT_HTTPS=false
+    ports:
+      - "9090:80"
+    volumes:
+      - "./data/assets:/var/openproject/assets"
+      - "./data/pgdata:/var/openproject/pgdata"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health_checks/default"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - openproject-network
+      - default
+
+networks:
+  openproject-network:
+    driver: bridge
+
+# Volumes section removed - using bind mounts to P: drive
