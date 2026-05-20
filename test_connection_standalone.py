@@ -21,7 +21,7 @@ async def test_openproject_connection():
     """Test connection to OpenProject API."""
     print("🔗 Testing OpenProject connection...")
     print(f"URL: {OPENPROJECT_URL}")
-    print(f"API Key: {'*' * 36 + OPENPROJECT_API_KEY[-4:] if len(OPENPROJECT_API_KEY) >= 4 else 'NOT_SET'}")
+    print(f"API Key: {'CONFIGURED' if OPENPROJECT_API_KEY else 'NOT_SET'}")
     
     if not OPENPROJECT_API_KEY or OPENPROJECT_API_KEY == "your_40_character_api_key_here":
         print("❌ API Key not configured in .env file")
