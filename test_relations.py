@@ -252,7 +252,7 @@ def main():
     print("OpenProject MCP Server - Relations Feature Testing")
     print("=" * 60)
     print(f"OpenProject URL: {settings.openproject_url}")
-    print(f"Using API Key: {'***' + settings.openproject_api_key[-4:] if settings.openproject_api_key else 'NOT CONFIGURED'}")
+    print(f"API Key configured: {'YES' if settings.openproject_api_key else 'NO'}")
     
     if not settings.openproject_api_key:
         print("❌ OpenProject API key not configured. Please set OPENPROJECT_API_KEY environment variable.")
