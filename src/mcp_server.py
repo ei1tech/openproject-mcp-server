@@ -438,10 +438,10 @@ async def get_projects() -> str:
 @app.tool()
 async def get_work_packages(project_id: int) -> str:
     """Get work packages for a specific project.
-    
+
     Args:
         project_id: ID of the project to get work packages from
-    
+
     Returns:
         JSON string with list of work packages
     """
@@ -451,9 +451,9 @@ async def get_work_packages(project_id: int) -> str:
                 "success": False,
                 "error": "Project ID must be a positive integer"
             })
-        
+
         work_packages = await openproject_client.get_work_packages(project_id)
-        
+
         wp_list = []
         for wp in work_packages:
             wp_list.append({
@@ -467,13 +467,127 @@ async def get_work_packages(project_id: int) -> str:
                 "assignee": wp.get("_links", {}).get("assignee", {}).get("title", "Unassigned"),
                 "url": f"{settings.openproject_url}/work_packages/{wp.get('id')}"
             })
-        
+
         return json.dumps({
             "success": True,
             "message": f"Found {len(wp_list)} work packages in project {project_id}",
             "work_packages": wp_list
         }, indent=2)
-        
+
+    except OpenProjectAPIError as e:
+        return json.dumps({
+            "success": False,
+            "error": f"OpenProject API error: {e.message}",
+            "details": e.response_data
+        }, indent=2)
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": f"Unexpected error: {str(e)}"
+        }, indent=2)
+
+
+@app.tool()
+async def get_work_packages_by_date_range(
+    start_date: str,
+    end_date: str,
+    project_ids: Optional[list] = None,
+    status_filter: str = "open",
+    group_by_project: bool = True
+) -> str:
+    """Query work packages across multiple projects within a date range.
+
+    This is the key feature for NanoClaw daily agenda queries. Returns work packages
+    from all projects the user has access to, within the specified date range.
+
+    Args:
+        start_date: Start date in YYYY-MM-DD format
+        end_date: End date in YYYY-MM-DD format
+        project_ids: Optional list of specific project IDs to filter (if None, all projects)
+        status_filter: Filter by status - "open", "closed", or "all" (default: "open")
+        group_by_project: Whether to group results by project (default: True)
+
+    Returns:
+        JSON string with work packages grouped by project if requested
+    """
+    try:
+        # Validate date format
+        if not _is_valid_date_format(start_date):
+            return json.dumps({
+                "success": False,
+                "error": "Start date must be in YYYY-MM-DD format"
+            })
+
+        if not _is_valid_date_format(end_date):
+            return json.dumps({
+                "success": False,
+                "error": "End date must be in YYYY-MM-DD format"
+            })
+
+        # Query work packages by date range
+        work_packages = await openproject_client.get_work_packages_by_date_range(
+            start_date=start_date,
+            end_date=end_date,
+            project_ids=project_ids,
+            status_filter=status_filter
+        )
+
+        # Group by project if requested
+        if group_by_project:
+            grouped = {}
+            for wp in work_packages:
+                project_href = wp.get("_links", {}).get("project", {}).get("href", "")
+                project_id = project_href.split("/")[-1] if project_href else "unknown"
+
+                if project_id not in grouped:
+                    grouped[project_id] = {
+                        "project_id": project_id,
+                        "work_packages": []
+                    }
+
+                grouped[project_id]["work_packages"].append({
+                    "id": wp.get("id"),
+                    "subject": wp.get("subject"),
+                    "description": wp.get("description", {}).get("raw", ""),
+                    "start_date": wp.get("startDate"),
+                    "due_date": wp.get("dueDate"),
+                    "status": wp.get("_links", {}).get("status", {}).get("title", "Unknown"),
+                    "assignee": wp.get("_links", {}).get("assignee", {}).get("title", "Unassigned"),
+                    "url": f"{settings.openproject_url}/work_packages/{wp.get('id')}"
+                })
+
+            return json.dumps({
+                "success": True,
+                "message": f"Found {len(work_packages)} work packages between {start_date} and {end_date}",
+                "query_date_range": f"{start_date} to {end_date}",
+                "total_work_packages": len(work_packages),
+                "projects_count": len(grouped),
+                "work_packages_by_project": list(grouped.values())
+            }, indent=2)
+        else:
+            # Return flat list
+            wp_list = []
+            for wp in work_packages:
+                wp_list.append({
+                    "id": wp.get("id"),
+                    "subject": wp.get("subject"),
+                    "description": wp.get("description", {}).get("raw", ""),
+                    "project_id": wp.get("_links", {}).get("project", {}).get("href", "").split("/")[-1],
+                    "start_date": wp.get("startDate"),
+                    "due_date": wp.get("dueDate"),
+                    "status": wp.get("_links", {}).get("status", {}).get("title", "Unknown"),
+                    "assignee": wp.get("_links", {}).get("assignee", {}).get("title", "Unassigned"),
+                    "url": f"{settings.openproject_url}/work_packages/{wp.get('id')}"
+                })
+
+            return json.dumps({
+                "success": True,
+                "message": f"Found {len(wp_list)} work packages between {start_date} and {end_date}",
+                "query_date_range": f"{start_date} to {end_date}",
+                "total_work_packages": len(wp_list),
+                "work_packages": wp_list
+            }, indent=2)
+
     except OpenProjectAPIError as e:
         return json.dumps({
             "success": False,

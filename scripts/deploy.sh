@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 # Configuration
 IMAGE_NAME="openproject-mcp-server"
 CONTAINER_NAME="openproject-mcp-server"
-DEFAULT_PORT=8080
+DEFAULT_PORT=39127
 
 # Functions
 log_info() {
@@ -89,7 +89,8 @@ run_container() {
     docker run -d \
         --name $CONTAINER_NAME \
         --env-file .env \
-        -p $port:8080 \
+        -p $port:39127 \
+        -p 39128:8081 \
         -v "$(pwd)/logs:/app/logs" \
         -v "$(pwd)/data:/app/data" \
         --restart unless-stopped \
@@ -204,9 +205,9 @@ case "${1:-deploy}" in
         echo "Usage: $0 [command] [port]"
         echo
         echo "Commands:"
-        echo "  deploy [port]  - Build and deploy the server (default: port 8080)"
+        echo "  deploy [port]  - Build and deploy the server (default: port 39127)"
         echo "  build          - Build Docker image only"
-        echo "  start [port]   - Start container (default: port 8080)"
+        echo "  start [port]   - Start container (default: port 39127)"
         echo "  stop           - Stop container"
         echo "  restart [port] - Restart container"
         echo "  logs           - Show container logs"
@@ -215,7 +216,7 @@ case "${1:-deploy}" in
         echo "  help           - Show this help"
         echo
         echo "Examples:"
-        echo "  $0 deploy         # Deploy on default port 8080"
+        echo "  $0 deploy         # Deploy on default port 39127"
         echo "  $0 deploy 9000    # Deploy on port 9000"
         echo "  $0 logs           # View logs"
         echo "  $0 status         # Check status"

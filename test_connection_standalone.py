@@ -14,8 +14,13 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-OPENPROJECT_URL = os.getenv("OPENPROJECT_URL", "http://localhost:3000")
-OPENPROJECT_API_KEY = os.getenv("OPENPROJECT_API_KEY", "")
+OPENPROJECT_URL = os.getenv("OPENPROJECT_URL")
+OPENPROJECT_API_KEY = os.getenv("OPENPROJECT_API_KEY")
+
+if not OPENPROJECT_URL:
+    raise ValueError("OPENPROJECT_URL environment variable is required")
+if not OPENPROJECT_API_KEY:
+    raise ValueError("OPENPROJECT_API_KEY environment variable is required")
 
 async def test_openproject_connection():
     """Test connection to OpenProject API."""
