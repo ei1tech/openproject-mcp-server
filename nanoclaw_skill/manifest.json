@@ -1,0 +1,168 @@
+{
+  "skill": {
+    "name": "OpenProject",
+    "version": "1.0.0",
+    "id": "openproject-nanoclaw",
+    "type": "mcp-integration",
+    "description": "Centralized multi-project task management for HP server migration and concurrent initiatives using OpenProject",
+    "keywords": ["project-management", "tasks", "multi-project", "work-packages", "gantt-charts"],
+    "author": {
+      "name": "George",
+      "email": "george@example.com"
+    }
+  },
+  "mcp_server": {
+    "type": "fastmcp",
+    "docker": {
+      "image": "openproject-mcp-server:latest",
+      "container_name": "openproject-mcp",
+      "port": 8085,
+      "environment": {
+        "OPENPROJECT_URL": "http://openproject:3000",
+        "OPENPROJECT_API_KEY": "${OPENPROJECT_API_KEY}"
+      }
+    },
+    "local": {
+      "script": "src/mcp_server.py",
+      "runtime": "python3"
+    }
+  },
+  "cli": {
+    "script": "openproject_cli.py",
+    "language": "python3",
+    "dependencies": [
+      "httpx>=0.24.0"
+    ]
+  },
+  "capabilities": {
+    "projects": {
+      "create": true,
+      "list": true,
+      "get_summary": true,
+      "delete": false
+    },
+    "work_packages": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": false,
+      "batch_operations": false
+    },
+    "queries": {
+      "by_date_range": true,
+      "multi_project": true,
+      "by_assignee": true,
+      "by_status": true,
+      "by_project": true
+    },
+    "dependencies": {
+      "create": true,
+      "read": true,
+      "delete": true
+    },
+    "team": {
+      "list_members": true,
+      "add_member": true,
+      "remove_member": false
+    }
+  },
+  "commands": [
+    {
+      "name": "create_project",
+      "description": "Create a new project for tracking work",
+      "usage": "create_project --name 'Project Name' --description 'Description'"
+    },
+    {
+      "name": "list_projects",
+      "description": "Show all active projects",
+      "usage": "list_projects"
+    },
+    {
+      "name": "create_task",
+      "description": "Create a work package (task) in a project",
+      "usage": "create_task --project_id 5 --subject 'Task Title' --due_date '2026-05-25'"
+    },
+    {
+      "name": "get_tasks_by_date",
+      "description": "Query work packages across projects by due date (KILLER FEATURE)",
+      "usage": "get_tasks_by_date --date_range 'today to +2' --status open",
+      "examples": [
+        "get_tasks_by_date --date_range 'today'",
+        "get_tasks_by_date --date_range 'today to +7' --projects all",
+        "get_tasks_by_date --date_range '2026-05-21 to 2026-05-28'"
+      ]
+    },
+    {
+      "name": "update_task",
+      "description": "Modify an existing work package",
+      "usage": "update_task --task_id 234 --status 'In Progress'"
+    },
+    {
+      "name": "create_dependency",
+      "description": "Create a link between work packages",
+      "usage": "create_dependency --from_task_id 234 --to_task_id 235 --relation_type 'follows'"
+    },
+    {
+      "name": "get_project_team",
+      "description": "List all team members assigned to a project",
+      "usage": "get_project_team --project_id 5"
+    }
+  ],
+  "examples": {
+    "daily_agenda": {
+      "description": "Get all tasks due today across projects",
+      "prompt": "What am I working on today?",
+      "command": "get_tasks_by_date --date_range 'today' --status open"
+    },
+    "weekly_outlook": {
+      "description": "Show tasks due this week",
+      "prompt": "What's my workload for this week?",
+      "command": "get_tasks_by_date --date_range 'this week' --status open"
+    },
+    "create_hp_task": {
+      "description": "Create task in HP Server Build project",
+      "prompt": "Create task to pull motherboard from notebook, due tomorrow",
+      "command": "create_task --project_id 5 --subject 'Pull motherboard from notebook' --due_date '2026-05-22'"
+    },
+    "task_linking": {
+      "description": "Link tasks to show dependencies",
+      "prompt": "Task 235 depends on task 234 completing first",
+      "command": "create_dependency --from_task_id 234 --to_task_id 235 --relation_type 'follows'"
+    }
+  },
+  "integration": {
+    "nanoclaw": {
+      "enabled": true,
+      "mcp_endpoint": "http://localhost:8085",
+      "prompt_template": "prompt_template.md"
+    },
+    "openproject": {
+      "api_version": "v3",
+      "supported_versions": ["13.0+"]
+    }
+  },
+  "deployment": {
+    "docker": {
+      "enabled": true,
+      "compose": true,
+      "healthcheck": {
+        "tool": "health_check",
+        "interval": 30
+      }
+    },
+    "local": {
+      "enabled": true,
+      "requirements_file": "requirements.txt"
+    }
+  },
+  "future_enhancements": [
+    "Custom filters by assignee, status, priority",
+    "Gantt chart visualization export",
+    "Time tracking integration",
+    "Automated task creation from templates",
+    "Budget and resource allocation tracking",
+    "Custom field support for domain-specific data",
+    "Slack/Teams integration for notifications",
+    "Automated rollup of subtasks for parent tracking"
+  ]
+}

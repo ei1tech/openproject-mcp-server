@@ -1,0 +1,53 @@
+# OpenProject NanoClaw Skill Configuration
+skill:
+  name: OpenProject
+  version: 1.0.0
+  description: Multi-project task management across HP server build and concurrent initiatives
+  author: George
+
+# MCP Server Configuration
+mcp_server:
+  url: http://localhost:8085
+  timeout: 30
+
+# Supported commands
+commands:
+  project_management:
+    - create_project
+    - list_projects
+    - get_project_summary
+
+  work_packages:
+    - create_task
+    - get_tasks_by_date  # THE KILLER FEATURE
+    - update_task
+    - delete_task
+
+  dependencies:
+    - create_dependency
+
+  team:
+    - get_project_team
+    - add_team_member
+
+# Date range formats supported by the skill
+date_formats:
+  - "today"
+  - "tomorrow"
+  - "today to +N"
+  - "this week"
+  - "next week"
+  - "this month"
+  - "next month"
+  - "YYYY-MM-DD"
+  - "YYYY-MM-DD to YYYY-MM-DD"
+
+# Status filters
+status_filters:
+  - open
+  - closed
+  - all
+
+# Environment variables
+environment:
+  OPENPROJECT_MCP_URL: "URL of the MCP server (default: http://localhost:8085)"
