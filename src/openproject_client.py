@@ -153,7 +153,81 @@ class OpenProjectClient:
             return await self.get_paginated_results(url)
         response = await self._make_request("GET", url)
         return response.get("_embedded", {}).get("elements", [])
-    
+
+    async def get_work_packages_by_date_range(
+        self,
+        start_date: str,
+        end_date: str,
+        project_ids: Optional[List[int]] = None,
+        status_filter: Optional[str] = None,
+        use_pagination: bool = False
+    ) -> List[Dict[str, Any]]:
+        """Get work packages across projects within a date range.
+
+        Args:
+            start_date: Start date in YYYY-MM-DD format
+            end_date: End date in YYYY-MM-DD format
+            project_ids: Optional list of project IDs to filter. If None, queries all projects.
+            status_filter: Optional status filter ("open", "closed", "all"). Default: "open"
+            use_pagination: Whether to use pagination for large result sets
+
+        Returns:
+            List of work packages sorted by due date
+        """
+        # Build filter for date range on dueDate
+        filters = [
+            {
+                "dueDate": {
+                    "operator": "><",
+                    "values": [start_date, end_date]
+                }
+            }
+        ]
+
+        # Add status filter if specified
+        if status_filter == "closed":
+            filters.append({
+                "status": {
+                    "operator": "c",  # closed status operator
+                    "values": []
+                }
+            })
+        elif status_filter == "open":
+            filters.append({
+                "status": {
+                    "operator": "o",  # open status operator
+                    "values": []
+                }
+            })
+
+        # Build URL with filters
+        url = "/work_packages"
+        filter_param = json.dumps(filters)
+
+        # Add pagination if requested
+        params = f"?filters={filter_param}"
+        if use_pagination:
+            params += "&pageSize=100"
+
+        # Make the request with the filter parameter
+        full_url = url + params
+        response = await self._make_request("GET", full_url)
+
+        work_packages = response.get("_embedded", {}).get("elements", [])
+
+        # Filter by project IDs if specified
+        if project_ids:
+            work_packages = [
+                wp for wp in work_packages
+                if wp.get("_links", {}).get("project", {}).get("href", "").endswith(f"/{project_ids[-1]}")
+                or any(str(pid) in wp.get("_links", {}).get("project", {}).get("href", "") for pid in project_ids)
+            ]
+
+        # Sort by due date
+        work_packages.sort(key=lambda wp: wp.get("dueDate", "9999-12-31"))
+
+        return work_packages
+
     async def create_work_package(self, work_package_data: WorkPackageCreateRequest) -> Dict[str, Any]:
         """Create a new work package."""
         payload = {
