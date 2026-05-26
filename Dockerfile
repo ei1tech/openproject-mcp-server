@@ -62,6 +62,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE 8080 8081
 
 # Default command - run HTTP server with status endpoints
-CMD ["python3", "scripts/run_http_server_with_status.py"]
+CMD ["python", "mcp_proxy.py"]
 
 
