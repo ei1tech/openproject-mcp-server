@@ -1,14 +1,12 @@
 import os
 import httpx
 from fastmcp import FastMCP
-from fastmcp.server.middleware import Middleware
 
-# Read OpenProject URL from environment (set in Railway)
 OPENPROJECT_URL = os.environ.get("OPENPROJECT_URL", "").rstrip("/")
 
-mcp = FastMCP("OpenProject MCP")
+mcp = FastMCP("OpenProject")
 
-def get_op_client(api_key: str) -> httpx.Client:
+def get_client(api_key: str) -> httpx.Client:
     return httpx.Client(
         base_url=f"{OPENPROJECT_URL}/api/v3",
         auth=("apikey", api_key),
@@ -16,14 +14,27 @@ def get_op_client(api_key: str) -> httpx.Client:
         timeout=30.0
     )
 
-# --- Tool definitions ---
-# Each tool receives api_key as a parameter so users pass their own
-
 @mcp.tool()
 def list_projects(api_key: str) -> dict:
-    """List all projects the user has access to"""
-    with get_op_client(api_key) as client:
-        r = client.get("/projects")
+    """List all OpenProject projects. api_key is the user's OpenProject API token."""
+    with get_client(api_key) as c:
+        r = c.get("/projects")
+        r.raise_for_status()
+        return r.json()
+
+@mcp.tool()
+def get_project(api_key: str, project_id: int) -> dict:
+    """Get a specific project by ID. api_key is the user's OpenProject API token."""
+    with get_client(api_key) as c:
+        r = c.get(f"/projects/{project_id}")
+        r.raise_for_status()
+        return r.json()
+
+@mcp.tool()
+def list_work_packages(api_key: str, project_id: int) -> dict:
+    """List all work packages in a project. api_key is the user's OpenProject API token."""
+    with get_client(api_key) as c:
+        r = c.get(f"/projects/{project_id}/work_packages")
         r.raise_for_status()
         return r.json()
 
@@ -36,10 +47,13 @@ def create_work_package(
     description: str = "",
     assignee_id: int = None
 ) -> dict:
-    """Create a work package (Epic, Story, Task etc) in a project"""
-    # First get available types
-    with get_op_client(api_key) as client:
-        types_r = client.get(f"/projects/{project_id}/types")
+    """
+    Create a work package in a project.
+    api_key is the user's OpenProject API token.
+    type_name can be Epic, Story, Task, Milestone etc.
+    """
+    with get_client(api_key) as c:
+        types_r = c.get(f"/projects/{project_id}/types")
         types_r.raise_for_status()
         types = types_r.json().get("_embedded", {}).get("elements", [])
         type_id = next(
@@ -56,31 +70,15 @@ def create_work_package(
         }
         if assignee_id:
             payload["_links"]["assignee"] = {"href": f"/api/v3/users/{assignee_id}"}
-        r = client.post(f"/projects/{project_id}/work_packages", json=payload)
-        r.raise_for_status()
-        return r.json()
-
-@mcp.tool()
-def list_work_packages(api_key: str, project_id: int) -> dict:
-    """List work packages in a project"""
-    with get_op_client(api_key) as client:
-        r = client.get(f"/projects/{project_id}/work_packages")
+        r = c.post(f"/projects/{project_id}/work_packages", json=payload)
         r.raise_for_status()
         return r.json()
 
 @mcp.tool()
 def list_users(api_key: str) -> dict:
-    """List users in the OpenProject instance"""
-    with get_op_client(api_key) as client:
-        r = client.get("/users")
-        r.raise_for_status()
-        return r.json()
-
-@mcp.tool()
-def get_project(api_key: str, project_id: int) -> dict:
-    """Get details of a specific project"""
-    with get_op_client(api_key) as client:
-        r = client.get(f"/projects/{project_id}")
+    """List all users in the OpenProject instance. api_key is the user's OpenProject API token."""
+    with get_client(api_key) as c:
+        r = c.get("/users")
         r.raise_for_status()
         return r.json()
 
