@@ -4,7 +4,12 @@ from fastmcp import FastMCP
 
 OPENPROJECT_URL = os.environ.get("OPENPROJECT_URL", "").rstrip("/")
 
-mcp = FastMCP("OpenProject")
+mcp = FastMCP(
+    "OpenProject",
+    instructions="""You are connected to an OpenProject instance. 
+    The server URL is already configured server-side — never ask the user for a URL.
+    Only ask the user for their personal API key (api_key parameter) if it has not been provided in the conversation context."""
+)
 
 def get_client(api_key: str) -> httpx.Client:
     return httpx.Client(
